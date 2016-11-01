@@ -1,6 +1,7 @@
 module FEHM
 
 import WriteVTK
+import JLD
 
 function readzone(filename)
 	f = open(filename)
@@ -34,7 +35,7 @@ function readzone(filename)
 	return zonenumbers, nodenumbers
 end
 
-function parsegeo(geofilename)
+function parsegeo(geofilename, docells=true)
 	lines = readlines(geofilename)
 	i = 1
 	xs = Float64[]
@@ -54,15 +55,19 @@ function parsegeo(geofilename)
 		i += 1
 		splitline = split(lines[i])
 	end
-	cells = Array(WriteVTK.MeshCell, length(lines) - i + 1)
-	fourtoseven = 4:7
-	for j = i:length(lines)
-		splitline = split(lines[j])
-		if splitline[3] != "tet"
-			error("only tets supported")
+	if docells
+		cells = Array(WriteVTK.MeshCell, length(lines) - i + 1)
+		fourtoseven = 4:7
+		for j = i:length(lines)
+			splitline = split(lines[j])
+			if splitline[3] != "tet"
+				error("only tets supported")
+			end
+			ns = map(i->parse(Int, splitline[i]), fourtoseven)
+			cells[j - i + 1] = WriteVTK.MeshCell(WriteVTK.VTKCellTypes.VTK_TETRA, ns)
 		end
-		ns = map(i->parse(Int, splitline[i]), fourtoseven)
-		cells[j - i + 1] = WriteVTK.MeshCell(WriteVTK.VTKCellTypes.VTK_TETRA, ns)
+	else
+		cells = Array(WriteVTK.MeshCell, 0)
 	end
 	return xs, ys, zs, cells
 end
@@ -82,6 +87,26 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 		WriteVTK.collection_add_timestep(pvd, vtkfile, time)
 	end
 	WriteVTK.vtk_save(pvd)
+end
+
+function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
+	rootdir = joinpath(split(rootname, "/")[1:end-1]...)
+	xs, ys, zs, cells = parsegeo(geofilename, false)
+	avslines = readlines(string(rootname, ".avs_log"))
+	crdatas = Array{Float64, 1}[]
+	times = Float64[]
+	for i = 5:length(avslines)
+		splitline = split(avslines[i])
+		avsrootname = joinpath(rootdir, splitline[1])
+		time = parse(Float64, splitline[2])
+		if timefilter(time)
+			push!(times, time)
+			timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
+			crdata = timedata[:, 2]
+			push!(crdatas, crdata)
+		end
+	end
+	JLD.save(jldfilename, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
 end
 
 end
