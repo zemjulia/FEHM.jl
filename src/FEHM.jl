@@ -3,6 +3,40 @@ module FEHM
 import WriteVTK
 import JLD
 
+function parsefin(filename)
+	lines = readlines(filename)
+	result = Dict()
+	result["title"] = strip(split(lines[2], ":")[2])
+	result["time"] = parse(Float64, lines[3])
+	result["nddp"] = parse(Int, split(lines[4])[1])
+	i = 5
+	while i <= length(lines)
+		key = strip(lines[i])
+		result[key] = Float64[]
+		i += 1
+		while i <= length(lines) && length(result[key]) < result["nddp"]
+			append!(result[key], map(x->parse(Float64, x), split(lines[i])))
+			i += 1
+		end
+	end
+	return result
+end
+
+function writefin(findata, filename; writekeys=["saturation", "pressure", "no fluxes"])
+	f = open(filename, "w")
+	write(f, "written by FEHM.jl\n")
+	write(f, "title:  $(findata["title"])\n")
+	write(f, "   $(findata["time"])\n")
+	write(f, "    $(findata["nddp"]) nddp")
+	for k in writekeys
+		write(f, "\n$k")
+		for x in findata[k]
+			write(f, "\n$x")
+		end
+	end
+	close(f)
+end
+
 function readzone(filename)
 	f = open(filename)
 	lines = readlines(f)
