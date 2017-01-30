@@ -69,6 +69,23 @@ function readzone(filename)
 	return zonenumbers, nodenumbers
 end
 
+function parsegrid(fehmfilename)
+	lines = readlines(fehmfilename)
+	if !startswith(lines[1], "coor")
+		error("FEHM grid file doesn't start with \"coor\"")
+	end
+	numgridpoints = parse(Int, lines[2])
+	dims = length(split(lines[3])) - 1
+	coords = Array(Float64, dims, numgridpoints)
+	for i = 1:numgridpoints
+		splitline = split(lines[2 + i])
+		for j = 1:dims
+			coords[j, i] = parse(Float64, splitline[j + 1])
+		end
+	end
+	return coords
+end
+
 function parsegeo(geofilename, docells=true)
 	lines = readlines(geofilename)
 	i = 1
