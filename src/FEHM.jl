@@ -160,4 +160,78 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 	JLD.save(jldfilename, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
 end
 
+function loadstor(filename)
+	#see LaGriT's documentation for details on the format: http://lagrit.lanl.gov/docs/STOR_Form.html
+	#"coefficients" are really areas divided by lengths
+	lines = readlines(filename)[3:end]
+	numwrittencoeffs, numequations, ncoef_p_neq_p1, numareacoeffs = map(x->parse(Int, x), split(lines[1])[1:4])
+	numcoeffs = ncoef_p_neq_p1 - numequations - 1
+	if numareacoeffs != 1
+		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
+	end
+	tokens = Float64[]
+	for i = 2:length(lines)
+		for x in split(lines[i])
+			push!(tokens, parse(Float64, x))
+		end
+	end
+	volumes = tokens[1:numequations]
+	fehmweirdness = Int.(tokens[numequations + 1:2 * numequations + 1])#see http://lagrit.lanl.gov/docs/STOR_Form.html to understand the fehmweirdness
+	numconnections = diff(fehmweirdness)
+	rowentries = Int.(tokens[2 * numequations + 2:2 * numequations + 1 + numcoeffs])
+	connections = Array{Pair{Int, Int}}(numcoeffs)
+	k = 1
+	for i = 1:numequations
+		for j = 1:numconnections[i]
+			connections[k] = i=>rowentries[k]
+			k += 1
+		end
+	end
+	coeffindices = Int.(tokens[2 * numequations + 2 + numcoeffs:2 * numequations + 1 + 2 * numcoeffs])
+	@assert tokens[2 * numequations + 2 + 2 * numcoeffs:3 * numequations + 2 + 2 * numcoeffs] == zeros(numequations + 1)#check that the zeros are where they should be
+	for i = 3 * numequations + 3 + 2 * numcoeffs:4 * numequations + 2 + 2 * numcoeffs
+		j = Int(tokens[i])
+		@assert connections[j - length(volumes) - 1][1] == connections[j - length(volumes) - 1][2]#check that the diagonals are in the right places
+	end
+	coeffs = tokens[4 * numequations + 3 + 2 * numcoeffs:4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs]
+	@assert 4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs == length(tokens)
+	areasoverlengths = Array{Float64}(length(connections))
+	for i = 1:length(areasoverlengths)
+		areasoverlengths[i] = abs(coeffs[coeffindices[i]])
+	end
+	return volumes, areasoverlengths
+end
+
+function parseflow(filename::String)
+	parseflow(readlines(filename), filename)
+end
+
+function parseflow(lines::Vector, filename)
+	@assert startswith(lines[1], "flow")
+	isanode = Array{Bool}(length(lines) - 2)
+	zoneornodenums = Array{Int}(length(lines) - 2)
+	skds = Array{Float64}(length(lines) - 2)
+	eflows = Array{Float64}(length(lines) - 2)
+	aipeds = Array{Float64}(length(lines) - 2)
+	for i = 2:length(lines) - 1
+		splitline = split(lines[i])
+		zoneornodenums[i - 1] = parse(Int, splitline[1])
+		skds[i - 1] = parse(Float64, splitline[4])
+		eflows[i - 1] = parse(Float64, splitline[5])
+		aipeds[i - 1] = parse(Float64, splitline[6])
+		if zoneornodenums[i - 1] < 0#it is a zone
+			@assert splitline[2] == "0"
+			@assert splitline[3] == "0"
+			isanode[i - 1] = false
+			zoneornodenums[i - 1] = -zoneornodenums[i - 1]
+		else#it is a node
+			if splitline[2] != splitline[1]
+				error("FEHM stride syntax not supported flow macro (line $i in $filename)")
+			end
+			isanode[i - 1] = true
+		end
+	end
+	return isanode, zoneornodenums, skds, eflows, aipeds
+end
+
 end
