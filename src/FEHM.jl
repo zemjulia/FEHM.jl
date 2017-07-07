@@ -234,4 +234,36 @@ function parseflow(lines::Vector, filename)
 	return isanode, zoneornodenums, skds, eflows, aipeds
 end
 
+function parsehyco(filename::String)
+	parsehyco(readlines(filename), filename)
+end
+
+function parsehyco(lines::Vector, filename::String)
+	@assert startswith(lines[1], "hyco")
+	isanode = Array{Bool}(length(lines) - 2)
+	zoneornodenums = Array{Int}(length(lines) - 2)
+	kxs = Array{Float64}(length(lines) - 2)
+	kys = Array{Float64}(length(lines) - 2)
+	kzs = Array{Float64}(length(lines) - 2)
+	for i = 2:length(lines) - 1
+		splitline = split(lines[i])
+		zoneornodenums[i - 1] = parse(Int, splitline[1])
+		kxs[i - 1] = parse(Float64, splitline[4])
+		kys[i - 1] = parse(Float64, splitline[5])
+		kzs[i - 1] = parse(Float64, splitline[6])
+		if zoneornodenums[i - 1] < 0#it is a zone
+			@assert splitline[2] == "0"
+			@assert splitline[3] == "0"
+			isanode[i - 1] = false
+			zoneornodenums[i - 1] = -zoneornodenums[i - 1]
+		else#it is a node
+			if splitline[2] != splitline[1]
+				error("FEHM stride syntax not supported hyco macro (line $i in $filename)")
+			end
+			isanode[i - 1] = true
+		end
+	end
+	return isanode, zoneornodenums, kxs, kys, kzs
+end
+
 end
