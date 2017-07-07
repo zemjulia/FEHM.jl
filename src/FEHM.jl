@@ -284,6 +284,24 @@ function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherst
 	for (i, x) in enumerate(otherstuff)
 		newotherstuff[i] = Array{eltype(x)}(numflatnodes)
 	end
+	k = 1
+	for i = 1:length(isanode)
+		if isanode[i]
+			for j = 1:length(otherstuff)
+				newotherstuff[j][k] = otherstuff[j][i]
+			end
+			nodenums[k] = zoneornodenums[i]
+			k += 1
+		else
+			for nodenum in zone2nodes[zoneornodenums[i]]
+				for j = 1:length(otherstuff)
+					newotherstuff[j][k] = otherstuff[j][i]
+				end
+				nodenums[k] = nodenum
+				k += 1
+			end
+		end
+	end
 	return nodenums, newotherstuff...
 end
 
