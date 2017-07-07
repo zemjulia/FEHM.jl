@@ -37,11 +37,14 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 	close(f)
 end
 
-function readzone(filename)
-	f = open(filename)
-	lines = readlines(f)
-	lines = map(chomp, lines)
-	close(f)
+readzone(filename) = parsezone(filename)
+
+function parsezone(filename)
+	return parsezone(readlines(filename), filename)
+end
+
+function parsezone(lines, filename)
+	lines = chomp.(lines)
 	if !startswith(lines[1], "zone") && !startswith(lines[1], "zonn")
 		error("zone/zonn file doesn't start with zone or zonn on the first line")
 	end
@@ -264,6 +267,24 @@ function parsehyco(lines::Vector, filename::String)
 		end
 	end
 	return isanode, zoneornodenums, kxs, kys, kzs
+end
+
+function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherstuff...)
+	zone2nodes = Dict{Int, Array{Int, 1}}(zip(zonenumbers, nodenumbers))
+	numflatnodes = 0
+	for i = 1:length(isanode)
+		if isanode[i]
+			numflatnodes += 1
+		else
+			numflatnodes += length(zone2nodes[zoneornodenums[i]])
+		end
+	end
+	nodenums = Array{Int}(numflatnodes)
+	newotherstuff = Array{Any}(length(otherstuff))
+	for (i, x) in enumerate(otherstuff)
+		newotherstuff[i] = Array{eltype(x)}(numflatnodes)
+	end
+	return nodenums, newotherstuff...
 end
 
 end
