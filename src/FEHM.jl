@@ -163,7 +163,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 	JLD.save(jldfilename, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
 end
 
-function loadstor(filename)
+function parsestor(filename)
 	#see LaGriT's documentation for details on the format: http://lagrit.lanl.gov/docs/STOR_Form.html
 	#"coefficients" are really areas divided by lengths
 	lines = readlines(filename)[3:end]
@@ -202,7 +202,7 @@ function loadstor(filename)
 	for i = 1:length(areasoverlengths)
 		areasoverlengths[i] = abs(coeffs[coeffindices[i]])
 	end
-	return volumes, areasoverlengths
+	return volumes, areasoverlengths, connections
 end
 
 function parseflow(filename::String)
