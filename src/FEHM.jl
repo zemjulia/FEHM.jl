@@ -166,18 +166,21 @@ end
 function parsestor(filename)
 	#see LaGriT's documentation for details on the format: http://lagrit.lanl.gov/docs/STOR_Form.html
 	#"coefficients" are really areas divided by lengths
-	lines = readlines(filename)[3:end]
-	numwrittencoeffs, numequations, ncoef_p_neq_p1, numareacoeffs = map(x->parse(Int, x), split(lines[1])[1:4])
+	f = open(filename)
+	readline(f)#throw away the first 2 lines
+	readline(f)
+	goodline = readline(f)
+	close(f)
+	numwrittencoeffs, numequations, ncoef_p_neq_p1, numareacoeffs = map(x->parse(Int, x), split(goodline)[1:4])
 	numcoeffs = ncoef_p_neq_p1 - numequations - 1
 	if numareacoeffs != 1
 		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
 	end
-	tokens = Float64[]
-	for i = 2:length(lines)
-		for x in split(lines[i])
-			push!(tokens, parse(Float64, x))
-		end
-	end
+	println("about to tokenize")
+	tokens_any = filter(x->isa(x, Number), transpose(readdlm(filename; skipstart=3)))
+	tokens::Array{Float64, 1} = Float64.(tokens_any)
+	tokens_any = nothing
+	@show length(tokens)
 	volumes = tokens[1:numequations]
 	fehmweirdness = Int.(tokens[numequations + 1:2 * numequations + 1])#see http://lagrit.lanl.gov/docs/STOR_Form.html to understand the fehmweirdness
 	numconnections = diff(fehmweirdness)
