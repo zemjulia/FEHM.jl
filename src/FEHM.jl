@@ -1,7 +1,7 @@
 module FEHM
 
-import WriteVTK
 import JLD
+import WriteVTK
 
 function parsefin(filename)
 	lines = readlines(filename)
@@ -62,11 +62,14 @@ function parsezone(lines, filename)
 	for i = 1:length(nnumlines)
 		nodenumbers[i] = Int64[]
 		numnodes = parse(Int, lines[nnumlines[i] + 1])
+		nodenumbers[i] = Array{Int64}(numnodes)
 		j = 2
-		while(length(nodenumbers[i]) < numnodes)
+		k = 1
+		while k <= numnodes
 			newnodes = map(x->parse(Int, x), split(lines[nnumlines[i] + j]))
-			nodenumbers[i] = [nodenumbers[i]; newnodes]
+			nodenumbers[i][k:k + length(newnodes) - 1] = newnodes
 			j += 1
+			k += length(newnodes)
 		end
 	end
 	return zonenumbers, nodenumbers
@@ -176,11 +179,9 @@ function parsestor(filename)
 	if numareacoeffs != 1
 		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
 	end
-	println("about to tokenize")
 	tokens_any = filter(x->isa(x, Number), transpose(readdlm(filename; skipstart=3)))
 	tokens::Array{Float64, 1} = Float64.(tokens_any)
 	tokens_any = nothing
-	@show length(tokens)
 	volumes = tokens[1:numequations]
 	fehmweirdness = Int.(tokens[numequations + 1:2 * numequations + 1])#see http://lagrit.lanl.gov/docs/STOR_Form.html to understand the fehmweirdness
 	numconnections = diff(fehmweirdness)
