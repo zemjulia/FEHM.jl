@@ -3,8 +3,22 @@ module FEHM
 import JLD
 import WriteVTK
 
+function myreadlines(filename::String)
+	f = open(filename)
+	l = myreadlines(f)
+	close(f)
+	return l
+end
+function myreadlines(stream::IO)
+	if VERSION >= v"0.6.0"
+		return readlines(stream; chomp=false)
+	else
+		return readlines(stream)
+	end
+end
+
 function parsefin(filename)
-	lines = readlines(filename)
+	lines = myreadlines(filename)
 	result = Dict()
 	result["title"] = strip(split(lines[2], ":")[2])
 	result["time"] = parse(Float64, lines[3])
@@ -40,7 +54,7 @@ end
 readzone(filename) = parsezone(filename)
 
 function parsezone(filename)
-	return parsezone(readlines(filename), filename)
+	return parsezone(myreadlines(filename), filename)
 end
 
 function parsezone(lines, filename)
@@ -54,11 +68,11 @@ function parsezone(lines, filename)
 			push!(nnumlines, i)
 		end
 	end
-	zonenumbers = Array(Int64, length(nnumlines))
+	zonenumbers = Array{Int64}(length(nnumlines))
 	for i = 1:length(nnumlines)
 		zonenumbers[i] = parse(Int, split(lines[nnumlines[i] - 1])[1])
 	end
-	nodenumbers = Array(Array{Int64, 1}, length(nnumlines))
+	nodenumbers = Array{Array{Int64, 1}, }(length(nnumlines))
 	for i = 1:length(nnumlines)
 		nodenumbers[i] = Int64[]
 		numnodes = parse(Int, lines[nnumlines[i] + 1])
@@ -76,13 +90,13 @@ function parsezone(lines, filename)
 end
 
 function parsegrid(fehmfilename)
-	lines = readlines(fehmfilename)
+	lines = myreadlines(fehmfilename)
 	if !startswith(lines[1], "coor")
 		error("FEHM grid file doesn't start with \"coor\"")
 	end
 	numgridpoints = parse(Int, lines[2])
 	dims = length(split(lines[3])) - 1
-	coords = Array(Float64, dims, numgridpoints)
+	coords = Array{Float64}(dims, numgridpoints)
 	for i = 1:numgridpoints
 		splitline = split(lines[2 + i])
 		for j = 1:dims
@@ -93,7 +107,7 @@ function parsegrid(fehmfilename)
 end
 
 function parsegeo(geofilename, docells=true)
-	lines = readlines(geofilename)
+	lines = myreadlines(geofilename)
 	i = 1
 	xs = Float64[]
 	ys = Float64[]
@@ -113,7 +127,7 @@ function parsegeo(geofilename, docells=true)
 		splitline = split(lines[i])
 	end
 	if docells
-		cells = Array(WriteVTK.MeshCell, length(lines) - i + 1)
+		cells = Array{WriteVTK.MeshCell}(length(lines) - i + 1)
 		fourtoseven = 4:7
 		for j = i:length(lines)
 			splitline = split(lines[j])
@@ -124,7 +138,7 @@ function parsegeo(geofilename, docells=true)
 			cells[j - i + 1] = WriteVTK.MeshCell(WriteVTK.VTKCellTypes.VTK_TETRA, ns)
 		end
 	else
-		cells = Array(WriteVTK.MeshCell, 0)
+		cells = Array{WriteVTK.MeshCell}(0)
 	end
 	return xs, ys, zs, cells
 end
@@ -132,7 +146,7 @@ end
 function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	pvd = WriteVTK.paraview_collection(pvdrootname)
 	xs, ys, zs, cells = parsegeo(geofilename)
-	avslines = readlines(string(rootname, ".avs_log"))
+	avslines = myreadlines(string(rootname, ".avs_log"))
 	for i = 5:length(avslines)
 		splitline = split(avslines[i])
 		avsrootname = splitline[1]
@@ -149,7 +163,7 @@ end
 function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 	rootdir = "/" * joinpath(split(rootname, "/")[1:end-1]...)
 	xs, ys, zs, cells = parsegeo(geofilename, false)
-	avslines = readlines(string(rootname, ".avs_log"))
+	avslines = myreadlines(string(rootname, ".avs_log"))
 	crdatas = Array{Float64, 1}[]
 	times = Float64[]
 	for i = 5:length(avslines)
@@ -210,7 +224,7 @@ function parsestor(filename)
 end
 
 function parseflow(filename::String)
-	parseflow(readlines(filename), filename)
+	parseflow(myreadlines(filename), filename)
 end
 
 function parseflow(lines::Vector, filename)
@@ -242,7 +256,7 @@ function parseflow(lines::Vector, filename)
 end
 
 function parsehyco(filename::String)
-	parsehyco(readlines(filename), filename)
+	parsehyco(myreadlines(filename), filename)
 end
 
 function parsehyco(lines::Vector, filename::String)
