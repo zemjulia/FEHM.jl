@@ -51,14 +51,16 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 	close(f)
 end
 
-readzone(filename) = parsezone(filename)
+function getwellnodes(filename::String, x::Number, y::Number)
+	c = readdlm(filename)
+	n = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
+	s = sortperm(n)
+	convert(Array{Int64,1}, ceil.([s[1:44] c[s[1:44],:] n[s[1:44]]][end-1:end,1]))
+end
 
-function dumpzone(filename::String, zonenumbers, nodenumbers)
-	d = splitdir(filename)
-	s = split(d[2], ".")
-	ext = s[end]
+function dumpzone(filename::String, zonenumbers, nodenumbers; keyword::String="zonn")
 	f = open(filename, "w")
-	println(f, ext)
+	println(f, keyword)
 	for i = 1:length(zonenumbers)
 		println(f, zonenumbers[i])
 		println(f, "nnum")
@@ -69,6 +71,8 @@ function dumpzone(filename::String, zonenumbers, nodenumbers)
 	println(f, "stop")
 	close(f)
 end
+
+readzone(filename) = parsezone(filename)
 
 function parsezone(filename)
 	return parsezone(myreadlines(filename), filename)
