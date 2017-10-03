@@ -53,6 +53,23 @@ end
 
 readzone(filename) = parsezone(filename)
 
+function dumpzone(filename::String, zonenumbers, nodenumbers)
+	d = splitdir(filename)
+	s = split(d[2], ".")
+	ext = s[end]
+	f = open(filename, "w")
+	println(f, ext)
+	for i = 1:length(zonenumbers)
+		println(f, zonenumbers[i])
+		println(f, "nnum")
+		println(f, length(nodenumbers[i]))
+		writedlm(f, nodenumbers[i]')
+	end
+	println(f, "")
+	println(f, "stop")
+	close(f)
+end
+
 function parsezone(filename)
 	return parsezone(myreadlines(filename), filename)
 end
