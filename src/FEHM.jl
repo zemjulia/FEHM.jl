@@ -58,14 +58,18 @@ Example:
 FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
 ```
 """
-function getwellnodes(filename::String, x::Number, y::Number; topnodes::Integer=2)
+function getwellnodes(filename::String, x::Number, y::Number; topnodes::Integer=2, nodespercolumn::Integer=44)
 	c = readdlm(filename)
-	n = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
-	s = sortperm(n)
-	convert(Array{Int64,1}, ceil.([s[1:44] c[s[1:44],:] n[s[1:44]]][end-(topnodes-1):end,1]))
+	d = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
+	s = sortperm(d)
+	n = s[1:nodespercolumn][end-(topnodes-1):end]
+	a = [s[1:nodespercolumn] c[s[1:nodespercolumn],:] d[s[1:nodespercolumn]]][end-(topnodes-1):end,:]
+	d = minimum(d[s[1:nodespercolumn]][end-(topnodes-1):end])
+	convert(Array{Int64,1}, ceil.(n)), d
 end
 
-function dumpzone(filename::String, zonenumbers, nodenumbers; keyword::String="zonn")
+function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; keyword::String="zonn")
+	@assert length(nodenumbers) == length(zonenumbers)
 	f = open(filename, "w")
 	println(f, keyword)
 	for i = 1:length(zonenumbers)
