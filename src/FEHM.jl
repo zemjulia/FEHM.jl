@@ -2,6 +2,7 @@ module FEHM
 
 import JLD
 import WriteVTK
+import DocumentFunction
 
 function myreadlines(filename::String)
 	f = open(filename)
@@ -51,11 +52,17 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 	close(f)
 end
 
-function getwellnodes(filename::String, x::Number, y::Number)
+"""
+Example:
+```julia
+FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
+```
+"""
+function getwellnodes(filename::String, x::Number, y::Number; topnodes::Integer=2)
 	c = readdlm(filename)
 	n = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
 	s = sortperm(n)
-	convert(Array{Int64,1}, ceil.([s[1:44] c[s[1:44],:] n[s[1:44]]][end-1:end,1]))
+	convert(Array{Int64,1}, ceil.([s[1:44] c[s[1:44],:] n[s[1:44]]][end-(topnodes-1):end,1]))
 end
 
 function dumpzone(filename::String, zonenumbers, nodenumbers; keyword::String="zonn")
