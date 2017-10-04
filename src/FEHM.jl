@@ -2,6 +2,7 @@ module FEHM
 
 import JLD
 import WriteVTK
+import DocumentFunction
 
 function myreadlines(filename::String)
 	f = open(filename)
@@ -48,6 +49,37 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 			write(f, "\n$x")
 		end
 	end
+	close(f)
+end
+
+"""
+Example:
+```julia
+FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
+```
+"""
+function getwellnodes(filename::String, x::Number, y::Number; topnodes::Integer=2, nodespercolumn::Integer=44)
+	c = readdlm(filename)
+	d = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
+	s = sortperm(d)
+	n = s[1:nodespercolumn][end-(topnodes-1):end]
+	a = [s[1:nodespercolumn] c[s[1:nodespercolumn],:] d[s[1:nodespercolumn]]][end-(topnodes-1):end,:]
+	d = minimum(d[s[1:nodespercolumn]][end-(topnodes-1):end])
+	convert(Array{Int64,1}, ceil.(n)), d
+end
+
+function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; keyword::String="zonn")
+	@assert length(nodenumbers) == length(zonenumbers)
+	f = open(filename, "w")
+	println(f, keyword)
+	for i = 1:length(zonenumbers)
+		println(f, zonenumbers[i])
+		println(f, "nnum")
+		println(f, length(nodenumbers[i]))
+		writedlm(f, nodenumbers[i]')
+	end
+	println(f, "")
+	println(f, "stop")
 	close(f)
 end
 
