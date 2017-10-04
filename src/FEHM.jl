@@ -161,9 +161,7 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 end
 
 function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
-	@show rootname
 	rootdir = splitdir(rootname)[1]
-	warn("$rootdir")
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	avslines = myreadlines(string(rootname, ".avs_log"))
 	crdatas = Array{Float64, 1}[]
