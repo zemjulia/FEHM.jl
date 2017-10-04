@@ -4,12 +4,24 @@ import JLD
 import WriteVTK
 import DocumentFunction
 
+function test()
+	fehmdir = Base.source_path()
+	if fehmdir == nothing
+		fehmdir = splitdir(dirname(@__FILE__))[1]
+	else
+		fehmdir = splitdir(Base.source_path())[1]
+	end
+	global fehmdir = fehmdir
+	include(joinpath(fehmdir, "test", "runtests.jl"))
+end
+
 function myreadlines(filename::String)
 	f = open(filename)
 	l = myreadlines(f)
 	close(f)
 	return l
 end
+
 function myreadlines(stream::IO)
 	if VERSION >= v"0.6.0"
 		return readlines(stream; chomp=false)
@@ -225,13 +237,13 @@ function parsestor(filename)
 	if numareacoeffs != 1
 		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
 	end
-	tokens_any = filter(x->isa(x, Number), transpose(readdlm(filename; skipstart=3)))
+	tokens_any = filter(x->isa(x, Number), readdlm(filename; skipstart=3)) # transpose does not work here
 	tokens::Array{Float64, 1} = Float64.(tokens_any)
 	tokens_any = nothing
 	volumes = tokens[1:numequations]
 	fehmweirdness = Int.(tokens[numequations + 1:2 * numequations + 1])#see http://lagrit.lanl.gov/docs/STOR_Form.html to understand the fehmweirdness
 	numconnections = diff(fehmweirdness)
-	rowentries = Int.(tokens[2 * numequations + 2:2 * numequations + 1 + numcoeffs])
+	rowentries = Int.(floor.(tokens[2 * numequations + 2:2 * numequations + 1 + numcoeffs]))
 	connections = Array{Pair{Int, Int}}(numcoeffs)
 	k = 1
 	for i = 1:numequations
@@ -240,7 +252,7 @@ function parsestor(filename)
 			k += 1
 		end
 	end
-	coeffindices = Int.(tokens[2 * numequations + 2 + numcoeffs:2 * numequations + 1 + 2 * numcoeffs])
+	coeffindices = Int.(floor.(tokens[2 * numequations + 2 + numcoeffs:2 * numequations + 1 + 2 * numcoeffs]))
 	@assert tokens[2 * numequations + 2 + 2 * numcoeffs:3 * numequations + 2 + 2 * numcoeffs] == zeros(numequations + 1)#check that the zeros are where they should be
 	for i = 3 * numequations + 3 + 2 * numcoeffs:4 * numequations + 2 + 2 * numcoeffs
 		j = Int(tokens[i])

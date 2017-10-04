@@ -1,7 +1,7 @@
 import FEHM
 using Base.Test
 
-isanode, zoneornodenums, skds, eflows, aipeds = FEHM.parseflow("../data/flow/wl.flow")
+isanode, zoneornodenums, skds, eflows, aipeds = FEHM.parseflow(FEHM.fehmdir * "/data/flow/wl.flow")
 @test !any(isanode[1:3])
 @test all(isanode[4:end])
 @test zoneornodenums[1:4] == [336000, 3, 5, 760868]

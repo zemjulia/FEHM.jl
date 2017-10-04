@@ -1,7 +1,7 @@
 import FEHM
 using Base.Test
 
-isanode, zoneornodenums, kxs, kys, kzs = FEHM.parsehyco("../data/hyco/w01.hyco")
+isanode, zoneornodenums, kxs, kys, kzs = FEHM.parsehyco(FEHM.fehmdir * "/data/hyco/w01.hyco")
 @test !isanode[1]
 @test isanode[2]
 @test zoneornodenums == [1, 2]
