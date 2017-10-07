@@ -70,8 +70,11 @@ Example:
 FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
 ```
 """
-function getwellnodes(filename::String, x::Number, y::Number; topnodes::Integer=2, nodespercolumn::Integer=44)
+function getwellnodes(filename::String, x::Number, y::Number; kw...)
 	c = readdlm(filename)
+	getwellnodes(c, x, y; kw...)
+end
+function getwellnodes(c::Array, x::Number, y::Number; topnodes::Integer=2, nodespercolumn::Integer=44)
 	d = sqrt.((c[:,1].-x).^2 + (c[:,2].-y).^2)
 	s = sortperm(d)
 	n = s[1:nodespercolumn][end-(topnodes-1):end]
