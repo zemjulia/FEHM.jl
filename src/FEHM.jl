@@ -104,9 +104,9 @@ end
 
 readzone(filename) = parsezone(filename)
 
-function parsezone(filename::String)
+function parsezone(filename::String; returndict::Bool=false)
 	info("Parse zones in $filename")
-	return parsezone(myreadlines(filename))
+	return parsezone(myreadlines(filename), returndict=returndict)
 end
 
 function parsezone(lines::Vector; returndict::Bool=false)
