@@ -1,7 +1,7 @@
 import FEHM
 using Base.Test
 
-zonenumbers, nodenumbers = FEHM.readzone("../data/smoothgrid/out_west.zonn")
+zonenumbers, nodenumbers = FEHM.readzone(FEHM.fehmdir * "/data/smoothgrid/out_west.zonn")
 @test length(zonenumbers) == 1
 @test zonenumbers[1] == 3
 @test length(nodenumbers) == 1

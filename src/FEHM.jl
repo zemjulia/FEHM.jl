@@ -30,6 +30,10 @@ function myreadlines(stream::IO)
 	end
 end
 
+function year2fehmday(year; offset::Number=1964)
+	return (year - offset) * 365.25
+end
+
 function parsefin(filename)
 	lines = myreadlines(filename)
 	result = Dict()
@@ -100,14 +104,15 @@ end
 
 readzone(filename) = parsezone(filename)
 
-function parsezone(filename)
-	return parsezone(myreadlines(filename), filename)
+function parsezone(filename::String)
+	info("Parse zones in $filename")
+	return parsezone(myreadlines(filename))
 end
 
-function parsezone(lines, filename)
+function parsezone(lines::Vector; returndict::Bool=false)
 	lines = chomp.(lines)
 	if !startswith(lines[1], "zone") && !startswith(lines[1], "zonn")
-		error("zone/zonn file doesn't start with zone or zonn on the first line")
+		error("Provided file doesn't start with zone or zonn on the first line")
 	end
 	nnumlines = Int64[]
 	for i = 1:length(lines)
@@ -119,7 +124,7 @@ function parsezone(lines, filename)
 	for i = 1:length(nnumlines)
 		zonenumbers[i] = parse(Int, split(lines[nnumlines[i] - 1])[1])
 	end
-	nodenumbers = Array{Array{Int64, 1}, }(length(nnumlines))
+	nodenumbers = Array{Array{Int64, 1}}(length(nnumlines))
 	for i = 1:length(nnumlines)
 		nodenumbers[i] = Int64[]
 		numnodes = parse(Int, lines[nnumlines[i] + 1])
@@ -133,7 +138,20 @@ function parsezone(lines, filename)
 			k += length(newnodes)
 		end
 	end
-	return zonenumbers, nodenumbers
+	if returndict
+		d1 = Dict()
+		d2 = Dict()
+		for i = 1:length(nnumlines)
+			d2[zonenumbers[i]] = Int64[]
+			for j = 1:length(nodenumbers[i])
+				d1[nodenumbers[i][j]] = zonenumbers[i]
+				push!(d2[zonenumbers[i]], nodenumbers[i][j])
+			end
+		end
+		return d1, d2
+	else
+		return zonenumbers, nodenumbers
+	end
 end
 
 function parsegrid(fehmfilename)
