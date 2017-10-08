@@ -244,13 +244,13 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 			push!(times, time)
 			filename = string(avsrootname, "_sca_node.avs")
 			if isfile(filename)
-				timedata = readdlm(filename), skipstart=2)
+				timedata = readdlm(filename, skipstart=2)
 				wldata = timedata[:, 2]
 				push!(wkdatas, wldata)
 			end
 			filename = string(avsrootname, "_con_node.avs")
 			if isfile(filename)
-				timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
+				timedata = readdlm(filename, skipstart=2)
 				crdata = timedata[:, 2]
 				push!(crdatas, crdata)
 			end
