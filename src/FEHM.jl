@@ -34,6 +34,10 @@ function year2fehmday(year; offset::Number=1964)
 	return (year - offset) * 365.25
 end
 
+function fehmday2year(fehmday; offset::Number=1964)
+	return fehmday / 365.25 + offset
+end
+
 function parsefin(filename)
 	lines = myreadlines(filename)
 	result = Dict()
@@ -229,6 +233,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 	rootdir = splitdir(rootname)[1]
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	avslines = myreadlines(string(rootname, ".avs_log"))
+	wldatas = Array{Float64, 1}[]
 	crdatas = Array{Float64, 1}[]
 	times = Float64[]
 	for i = 5:length(avslines)
@@ -237,12 +242,21 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 		time = parse(Float64, splitline[2])
 		if timefilter(time)
 			push!(times, time)
-			timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
-			crdata = timedata[:, 2]
-			push!(crdatas, crdata)
+			filename = string(avsrootname, "_sca_node.avs")
+			if isfile(filename)
+				timedata = readdlm(filename), skipstart=2)
+				wldata = timedata[:, 2]
+				push!(wkdatas, wldata)
+			end
+			filename = string(avsrootname, "_con_node.avs")
+			if isfile(filename)
+				timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
+				crdata = timedata[:, 2]
+				push!(crdatas, crdata)
+			end
 		end
 	end
-	JLD.save(jldfilename, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
+	JLD.save(jldfilename, "WL", wldatas, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
 end
 
 function parsestor(filename)
