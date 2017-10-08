@@ -8,7 +8,7 @@ FEHM.jl (Julia interface for FEHM)
 
 FEHM.jl interfaces [FEHM](http://fehm.lanl.gov).
 
-FEHM.jl is a module of ZEM framework.
+FEHM.jl is a module of the [ZEM](http://github.com/zemjulia) framework.
 
 ZEM is an integrated open-source high-performance computational (HPC) framework for environmental management in [Julia](http://julialang.org).
 
