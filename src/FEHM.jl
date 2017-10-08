@@ -222,9 +222,20 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 		time = parse(Float64, splitline[2])
 		vtkfile = WriteVTK.vtk_grid(string(vtkrootname, "_$(i - 5)"), xs, ys, zs, cells)
 		timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
-		WriteVTK.vtk_point_data(vtkfile, timedata[:, 2], "Cr")
-		WriteVTK.vtk_save(vtkfile)
-		WriteVTK.collection_add_timestep(pvd, vtkfile, time)
+		filename = string(avsrootname, "_sca_node.avs")
+		if isfile(filename)
+			timedata = readdlm(filename, skipstart=2)
+			WriteVTK.vtk_point_data(vtkfile, timedata[:, 2], "WL")
+			WriteVTK.vtk_save(vtkfile)
+			WriteVTK.collection_add_timestep(pvd, vtkfile, time)
+		end
+		filename = string(avsrootname, "_con_node.avs")
+		if isfile(filename)
+			timedata = readdlm(filename, skipstart=2)
+			WriteVTK.vtk_point_data(vtkfile, timedata[:, 2], "Cr")
+			WriteVTK.vtk_save(vtkfile)
+			WriteVTK.collection_add_timestep(pvd, vtkfile, time)
+		end
 	end
 	WriteVTK.vtk_save(pvd)
 end
