@@ -14,6 +14,6 @@ ZEM is an integrated open-source high-performance computational (HPC) framework 
 
 ZEM includes a series of modules (FEHM.jl, mysql.jl, etc.).
 
-ZEM is coupled with [Mads](http://mads.lanl.gov)
+ZEM is coupled with [Mads](http://mads.lanl.gov).
 
 ZEM has been tested to perform HPC simulations on a wide-range multi-processor clusters and parallel environments (Moab, Slurm, etc.).
