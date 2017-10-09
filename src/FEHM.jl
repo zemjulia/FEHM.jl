@@ -4,14 +4,14 @@ import JLD
 import WriteVTK
 import DocumentFunction
 
+fehmdir = Base.source_path()
+if fehmdir == nothing
+	fehmdir = splitdir(dirname(@__FILE__))[1]
+else
+	fehmdir = splitdir(fehmdir)[1]
+end
+
 function test()
-	fehmdir = Base.source_path()
-	if fehmdir == nothing
-		fehmdir = splitdir(dirname(@__FILE__))[1]
-	else
-		fehmdir = splitdir(Base.source_path())[1]
-	end
-	global fehmdir = fehmdir
 	include(joinpath(fehmdir, "test", "runtests.jl"))
 end
 
@@ -106,7 +106,7 @@ function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; ke
 	close(f)
 end
 
-readzone(filename) = parsezone(filename)
+readzone(filename; returndict::Bool=false) = parsezone(filename; returndict=returndict)
 
 function parsezone(filename::String; returndict::Bool=false)
 	info("Parse zones in $filename")
@@ -257,7 +257,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 			if isfile(filename)
 				timedata = readdlm(filename, skipstart=2)
 				wldata = timedata[:, 2]
-				push!(wkdatas, wldata)
+				push!(wldatas, wldata)
 			end
 			filename = string(avsrootname, "_con_node.avs")
 			if isfile(filename)
