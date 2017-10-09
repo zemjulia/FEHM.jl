@@ -22,6 +22,28 @@ function myreadlines(filename::String)
 	return l
 end
 
+function checknode()
+	proc = spawn(`ls`)
+	timedwait(() -> process_exited(proc), 10.) # 10 seconds
+	if process_running(proc)
+		kill(proc)
+		exit()
+	end
+end
+
+function runmodelindir(dir::Symbol; rootname::AbstractString="w01")
+	runmodelindir(string(dir); rootname=rootname)
+end
+
+function runmodelindir(dir::AbstractString; rootname::AbstractString="w01")
+	info("run $dir")
+	run(pipeline(`bash -c "cd $dir; xfehm $rootname.files"`, stdout=DevNull, stderr=DevNull))
+end
+
+function symlinkdir(filename::AbstractString, dir::AbstractString)
+	symlink(abspath(filename), joinpath(dir, filename))
+end
+
 function myreadlines(stream::IO)
 	if VERSION >= v"0.6.0"
 		return readlines(stream; chomp=false)
