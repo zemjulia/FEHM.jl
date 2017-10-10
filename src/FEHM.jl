@@ -52,12 +52,12 @@ function myreadlines(stream::IO)
 	end
 end
 
-function year2fehmday(year; offset::Number=1964)
-	return (year - offset) * 365.25
+function year2fehmday(year; modelstartyear::Number=1964)
+	return (year - modelstartyear) * 365.25
 end
 
-function fehmday2year(fehmday; offset::Number=1964)
-	return fehmday / 365.25 + offset
+function fehmday2year(fehmday; modelstartyear::Number=1964)
+	return fehmday / 365.25 + modelstartyear
 end
 
 function parsefin(filename)
