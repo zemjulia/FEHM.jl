@@ -264,7 +264,7 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	WriteVTK.vtk_save(pvd)
 end
 
-function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
+function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->true)
 	rootdir = splitdir(rootname)[1]
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	avslines = myreadlines(string(rootname, ".avs_log"))
