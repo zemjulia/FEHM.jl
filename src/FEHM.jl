@@ -18,10 +18,23 @@ function test()
 end
 
 function myreadlines(filename::String)
-	f = open(filename)
-	l = myreadlines(f)
-	close(f)
-	return l
+	if isfile(filename)
+		f = open(filename)
+		l = myreadlines(f)
+		close(f)
+		return l
+	else
+		warn("File $filename does not exist!")
+		return nothing
+	end
+end
+
+function myreadlines(stream::IO)
+	if VERSION >= v"0.6.0"
+		return readlines(stream; chomp=false)
+	else
+		return readlines(stream)
+	end
 end
 
 function checknode()
@@ -44,14 +57,6 @@ end
 
 function symlinkdir(filename::AbstractString, dir::AbstractString)
 	symlink(abspath(filename), joinpath(dir, filename))
-end
-
-function myreadlines(stream::IO)
-	if VERSION >= v"0.6.0"
-		return readlines(stream; chomp=false)
-	else
-		return readlines(stream)
-	end
 end
 
 function year2fehmday(year; modelstartyear::Number=1964)
@@ -267,7 +272,12 @@ end
 function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->true)
 	rootdir = splitdir(rootname)[1]
 	xs, ys, zs, cells = parsegeo(geofilename, false)
-	avslines = myreadlines(string(rootname, ".avs_log"))
+	filename = string(rootname, ".avs_log")
+	avslines = myreadlines(filename)
+	if avslines == nothing
+		warn("FEHM AVS processing failed!")
+		return nothing
+	end
 	wldatas = Array{Float64, 1}[]
 	crdatas = Array{Float64, 1}[]
 	times = Float64[]
