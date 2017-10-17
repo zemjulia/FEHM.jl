@@ -10,9 +10,14 @@ fehmdir = Base.source_path()
 if fehmdir == nothing
 	fehmdir = splitdir(dirname(@__FILE__))[1]
 else
-	fehmdir = splitdir(fehmdir)[1]
+	fehmdir = splitdir(splitdir(fehmdir)[1])[1]
 end
 
+"""
+Run the tests in runtests.jl
+
+$(DocumentFunction.documentfunction(test))
+"""
 function test()
 	include(joinpath(fehmdir, "test", "runtests.jl"))
 end
@@ -28,7 +33,6 @@ function myreadlines(filename::String)
 		return nothing
 	end
 end
-
 function myreadlines(stream::IO)
 	if VERSION >= v"0.6.0"
 		return readlines(stream; chomp=false)
@@ -59,14 +63,58 @@ function symlinkdir(filename::AbstractString, dir::AbstractString)
 	symlink(abspath(filename), joinpath(dir, filename))
 end
 
-function year2fehmday(year; modelstartyear::Number=1964)
-	return (year - modelstartyear) * 365.25
+@doc """
+Read lines of a file
+
+$(DocumentFunction.documentfunction(myreadlines;
+argtext=Dict("filename"=>"file name",
+            "stream"=>"file handle")))
+
+Returns:
+
+- an array with each line of the file an element
+""" myreadlines
+
+"""
+Convert a year into FEHM day (default start year is 1964)
+
+$(DocumentFunction.documentfunction(year2fehmday;
+argtext=Dict("year"=>"the year to convert"),
+keytext=Dict("offset"=>"the start year [default=`1964`]")))
+
+Returns:
+
+- FEHM day
+"""
+function year2fehmday(year; offset::Number=1964)
+	return (year - offset) * 365.25
 end
 
-function fehmday2year(fehmday; modelstartyear::Number=1964)
-	return fehmday / 365.25 + modelstartyear
+"""
+Convert FEHM day into a year (default start year is 1964)
+
+$(DocumentFunction.documentfunction(fehmday2year;
+argtext=Dict("fehmday"=>"the FEHM day to convert"),
+keytext=Dict("offset"=>"the start year [default=`1964`]")))
+
+Returns:
+
+- the converted year
+"""
+function fehmday2year(fehmday; offset::Number=1964)
+	return fehmday / 365.25 + offset
 end
 
+"""
+Parse the input file
+
+$(DocumentFunction.documentfunction(parsefin;
+argtext=Dict("filename"=>"file name")))
+
+Returns:
+
+- a dictionary of parsed file
+"""
 function parsefin(filename)
 	lines = myreadlines(filename)
 	result = Dict()
@@ -86,6 +134,18 @@ function parsefin(filename)
 	return result
 end
 
+"""
+Write data into a file
+
+$(DocumentFunction.documentfunction(writefin;
+argtext=Dict("findata"=>"input data to write",
+            "filename"=>"file name"),
+keytext=Dict("writekeys"=>"the keys of the items that will be written into the file [default=`\[\"saturation\", \"pressure\", \"no fluxes\"\]`]")))
+
+Dumps:
+
+- a file with input data written in it and named by the value of 'filename'
+"""
 function writefin(findata, filename; writekeys=["saturation", "pressure", "no fluxes"])
 	f = open(filename, "w")
 	write(f, "written by FEHM.jl\n")
@@ -101,12 +161,6 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 	close(f)
 end
 
-"""
-Example:
-```julia
-FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
-```
-"""
 function getwellnodes(filename::String, x::Number, y::Number; kw...)
 	c = readdlm(filename)
 	getwellnodes(c, x, y; kw...)
@@ -120,6 +174,38 @@ function getwellnodes(c::Array, x::Number, y::Number; topnodes::Integer=2, nodes
 	convert(Array{Int64,1}, ceil.(n)), d
 end
 
+@doc """
+Get nodes of wells from the input file
+
+$(DocumentFunction.documentfunction(getwellnodes;
+argtext=Dict("filename"=>"input file name",
+            "x"=>"x coordinates",
+            "y"=>"y coordinates",
+            "c"=>"file handle"),
+keytext=Dict("topnodes"=>"top nodes [default=`2`]",
+            "nodespercolumn"=>"nodes per column [default=`44`]",
+            "kw..."=>"other keyword argument")))
+
+Example:
+
+```julia
+FEHM.getwellnodes("tet.xyz", (499950.3031-100), 539101.3053)
+```
+""" getwellnodes
+
+"""
+Write zone information into a file
+
+$(DocumentFunction.documentfunction(dumpzone;
+argtext=Dict("filename"=>"output file name",
+            "zonenumbers"=>"zone numbers",
+            "nodenumbers"=>"node numbers"),
+keytext=Dict("keyword"=>"[default=`\"zonn\"`]")))
+
+Dumps:
+
+- a file contain zone information named by the value of 'filename'
+"""
 function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; keyword::String="zonn")
 	@assert length(nodenumbers) == length(zonenumbers)
 	f = open(filename, "w")
@@ -141,7 +227,6 @@ function parsezone(filename::String; returndict::Bool=false)
 	info("Parse zones in $filename")
 	return parsezone(myreadlines(filename), returndict=returndict)
 end
-
 function parsezone(lines::Vector; returndict::Bool=false)
 	lines = chomp.(lines)
 	if !startswith(lines[1], "zone") && !startswith(lines[1], "zonn")
@@ -187,6 +272,29 @@ function parsezone(lines::Vector; returndict::Bool=false)
 	end
 end
 
+@doc """
+Parse zone information from input file
+
+$(DocumentFunction.documentfunction(parsezone;
+argtext=Dict("filename"=>"input file name",
+            "lines"=>"a vector of the input file with each line an element"),
+keytext=Dict("returndict"=>"whether to return the zone information in dictoinaries [default=`false`]")))
+
+Returns:
+
+- zone numbers and node numbers
+""" parsezone
+
+"""
+Parse the grid coordinates from the input FEHM file
+
+$(DocumentFunction.documentfunction(parsegrid;
+argtext=Dict("fehmfilename"=>"FEHM file name")))
+
+Returns:
+
+- coordinates of the grid
+"""
 function parsegrid(fehmfilename)
 	lines = myreadlines(fehmfilename)
 	if !startswith(lines[1], "coor")
@@ -204,6 +312,17 @@ function parsegrid(fehmfilename)
 	return coords
 end
 
+"""
+Parse geo file
+
+$(DocumentFunction.documentfunction(parsegeo;
+argtext=Dict("geofilename"=>"geo file name",
+            "docells"=>"whether to get cell information [default=`true`]")))
+
+Returns:
+
+- x, y, z coordinates and mesh cell information
+"""
 function parsegeo(geofilename, docells=true)
 	lines = myreadlines(geofilename)
 	i = 1
@@ -241,6 +360,17 @@ function parsegeo(geofilename, docells=true)
 	return xs, ys, zs, cells
 end
 
+"""
+$(DocumentFunction.documentfunction(avs2vtk;
+argtext=Dict("geofilename"=>"geo file name",
+            "rootname"=>"root name of .avs_log file",
+            "pvdrootname"=>"pvd file root name",
+            "vtkrootname"=>"vtk file root name")))
+
+Dumps:
+
+- vtk file
+"""
 function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	pvd = WriteVTK.paraview_collection(pvdrootname)
 	xs, ys, zs, cells = parsegeo(geofilename)
@@ -269,6 +399,17 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	WriteVTK.vtk_save(pvd)
 end
 
+"""
+$(DocumentFunction.documentfunction(avs2jld;
+argtext=Dict("geofilename"=>"geo file name",
+            "rootname"=>"root name of .avs_log file",
+            "jldfilename"=>"jld file name"),
+keytext=Dict("timefilter"=>"function which defines whether the data of a specific time is going to be used [default=`true`]")))
+
+Dumps:
+
+- jld file
+"""
 function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->true)
 	rootdir = splitdir(rootname)[1]
 	xs, ys, zs, cells = parsegeo(geofilename, false)
@@ -304,6 +445,16 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->tru
 	JLD.save(jldfilename, "WL", wldatas, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
 end
 
+"""
+$(DocumentFunction.documentfunction(parsestor;
+argtext=Dict("filename"=>"input file name")))
+
+Returns:
+
+- `volumes` :
+- `areasoverlengths` : areas over lengths
+- `connections` :
+"""
 function parsestor(filename)
 	#see LaGriT's documentation for details on the format: http://lagrit.lanl.gov/docs/STOR_Form.html
 	#"coefficients" are really areas divided by lengths
@@ -350,7 +501,6 @@ end
 function parseflow(filename::String)
 	parseflow(myreadlines(filename), filename)
 end
-
 function parseflow(lines::Vector, filename)
 	@assert startswith(lines[1], "flow")
 	isanode = Array{Bool}(length(lines) - 2)
@@ -379,10 +529,23 @@ function parseflow(lines::Vector, filename)
 	return isanode, zoneornodenums, skds, eflows, aipeds
 end
 
+@doc """
+$(DocumentFunction.documentfunction(parseflow;
+argtext=Dict("filename"=>"input file name",
+            "lines"=>"a vector of the input file with each line an element")))
+
+Returns:
+
+- `isanode` : whether this is a node
+- `zoneornodenums` : zone or node numbers
+- `skds` :
+- `eflows` :
+- `aipeds` :
+""" parseflow
+
 function parsehyco(filename::String)
 	parsehyco(myreadlines(filename), filename)
 end
-
 function parsehyco(lines::Vector, filename::String)
 	@assert startswith(lines[1], "hyco")
 	isanode = Array{Bool}(length(lines) - 2)
@@ -411,6 +574,35 @@ function parsehyco(lines::Vector, filename::String)
 	return isanode, zoneornodenums, kxs, kys, kzs
 end
 
+@doc """
+$(DocumentFunction.documentfunction(parsehyco;
+argtext=Dict("filename"=>"input file name",
+            "lines"=>"a vector of the input file with each line an element")))
+
+Returns:
+
+- `isanode` : whether this is a node
+- `zoneornodenums` : zone or node numbers
+- `kxs` :
+- `kys` :
+- `kzs` :
+""" parsehyco
+
+"""
+Flatten zones
+
+$(DocumentFunction.documentfunction(flattenzones;
+argtext=Dict("zonenumbers"=>"zone numbers",
+            "nodenumbers"=>"node numbers",
+            "isanode"=>"whether this is a node",
+            "zoneornodenums"=>"zone or node numbers",
+            "otherstuff..."=>"other input arguments")))
+
+Returns:
+
+- node numbers
+- other stuff
+"""
 function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherstuff...)
 	zone2nodes = Dict{Int, Array{Int, 1}}(zip(zonenumbers, nodenumbers))
 	numflatnodes = 0
