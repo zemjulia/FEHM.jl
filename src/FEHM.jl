@@ -468,7 +468,7 @@ function parsestor(filename)
 	if numareacoeffs != 1
 		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
 	end
-	tokens_any = filter(x->isa(x, Number), readdlm(filename; skipstart=3)) # transpose does not work here
+	tokens_any = filter(x->isa(x, Number), permutedims(readdlm(filename; skipstart=3), (2, 1)))
 	tokens::Array{Float64, 1} = Float64.(tokens_any)
 	tokens_any = nothing
 	volumes = tokens[1:numequations]
