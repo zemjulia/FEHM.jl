@@ -146,7 +146,7 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	WriteVTK.vtk_save(pvd)
 end
 
-function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
+function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix="_con_node.avs")
 	rootdir = dirname(rootname)
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	avslines = readlines(string(rootname, ".avs_log"))
@@ -158,7 +158,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true)
 		time = parse(Float64, splitline[2])
 		if timefilter(time)
 			push!(times, time)
-			timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
+			timedata = readdlm(string(avsrootname, suffix), skipstart=2)
 			crdata = timedata[:, 2]
 			push!(crdatas, crdata)
 		end
