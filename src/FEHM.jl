@@ -410,8 +410,7 @@ Dumps:
 
 - jld file
 """
-function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->true)
-	rootdir = splitdir(rootname)[1]
+function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix="_con_node.avs")
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	filename = string(rootname, ".avs_log")
 	avslines = myreadlines(filename)
@@ -428,18 +427,9 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter::Function=t->tru
 		time = parse(Float64, splitline[2])
 		if timefilter(time)
 			push!(times, time)
-			filename = string(avsrootname, "_sca_node.avs")
-			if isfile(filename)
-				timedata = readdlm(filename, skipstart=2)
-				wldata = timedata[:, 2]
-				push!(wldatas, wldata)
-			end
-			filename = string(avsrootname, "_con_node.avs")
-			if isfile(filename)
-				timedata = readdlm(filename, skipstart=2)
-				crdata = timedata[:, 2]
-				push!(crdatas, crdata)
-			end
+			timedata = readdlm(string(avsrootname, suffix), skipstart=2)
+			crdata = timedata[:, 2]
+			push!(crdatas, crdata)
 		end
 	end
 	JLD.save(jldfilename, "WL", wldatas, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
