@@ -34,11 +34,7 @@ function myreadlines(filename::String)
 	end
 end
 function myreadlines(stream::IO)
-	if VERSION >= v"0.6.0"
-		return readlines(stream; chomp=false)
-	else
-		return readlines(stream)
-	end
+	return readlines(stream; chomp=false)
 end
 
 function checknode()
