@@ -432,6 +432,55 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix=
 end
 
 """
+$(DocumentFunction.documentfunction(avs2jld2;
+argtext=Dict("geofilename"=>"geo file name",
+            "rootname"=>"root name of .avs_log file",
+            "jld2filename"=>"jld file name"),
+keytext=Dict("timefilter"=>"function which defines whether the data of a specific time is going to be used [default=`true`]")))
+
+Dumps:
+
+- jld2 file
+"""
+function avs2jld2(geofilename, rootname, jld2filename; timefilter::Function=t->true)
+  if !endswith(jld2filename,".jld2")
+    jld2filename = "$jld2filename.jld2"
+  end
+  rootdir = splitdir(rootname)[1]
+	xs, ys, zs, cells = parsegeo(geofilename, false)
+	filename = string(rootname, ".avs_log")
+	avslines = myreadlines(filename)
+	if avslines == nothing
+		warn("FEHM AVS processing failed!")
+		return nothing
+	end
+	wldatas = Array{Float64, 1}[]
+	crdatas = Array{Float64, 1}[]
+	times = Float64[]
+	for i = 5:length(avslines)
+		splitline = split(avslines[i])
+		avsrootname = joinpath(rootdir, splitline[1])
+		time = parse(Float64, splitline[2])
+		if timefilter(time)
+      push!(times, time)
+			filename = string(avsrootname, "_sca_node.avs")
+			if isfile(filename)
+				timedata = readdlm(filename, skipstart=2)
+				wldata = timedata[:, 2]
+				push!(wldatas, wldata)
+			end
+			filename = string(avsrootname, "_con_node.avs")
+			if isfile(filename)
+				timedata = readdlm(filename, skipstart=2)
+				crdata = timedata[:, 2]
+				push!(crdatas, crdata)
+			end
+		end
+	end
+	FileIO.save(jld2filename, "WL", wldatas, "Cr", crdatas, "times", times, "xs", xs, "ys", ys, "zs", zs)
+end
+
+"""
 $(DocumentFunction.documentfunction(parsestor;
 argtext=Dict("filename"=>"input file name")))
 
