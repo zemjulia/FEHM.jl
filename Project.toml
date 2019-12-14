@@ -10,4 +10,4 @@ JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"
 
 [compat]
-julia = "≥ 1.0.0"
+julia = "^1"
