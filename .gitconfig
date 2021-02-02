@@ -6,8 +6,9 @@
 	precomposeunicode = true
 	logallrefupdates = true
 [remote "origin"]
-	url = https://github.com/zemjulia/FEHM.jl.git
 	url = https://github.com/madsjulia/FEHM.jl.git
+	url = https://github.com/zemjulia/FEHM.jl.git
+	url = https://gitlab.com/zem/FEHM.jl.git
 	fetch = +refs/heads/*:refs/remotes/origin/*
 [branch "master"]
 	remote = origin
