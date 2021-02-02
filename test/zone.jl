@@ -1,16 +1,16 @@
 import FEHM
-using Base.Test
+import Test
 
 zonenumbers, nodenumbers = FEHM.readzone(FEHM.fehmdir * "/data/smoothgrid/out_west.zonn")
 
-@testset "zone" begin
-    @test length(zonenumbers) == 1
-    @test length(nodenumbers) == 1
-    @test length(nodenumbers[1]) == 6059
+@Test.testset "zone" begin
+    @Test.test length(zonenumbers) == 1
+    @Test.test length(nodenumbers) == 1
+    @Test.test length(nodenumbers[1]) == 6059
     
-    @test zonenumbers[1] == 3
-    @test nodenumbers[1][1] == 2264
-    @test nodenumbers[1][2] == 2382
-    @test nodenumbers[1][end - 1] == 1263688
-    @test nodenumbers[1][end] == 1263779
+    @Test.test zonenumbers[1] == 3
+    @Test.test nodenumbers[1][1] == 2264
+    @Test.test nodenumbers[1][2] == 2382
+    @Test.test nodenumbers[1][end - 1] == 1263688
+    @Test.test nodenumbers[1][end] == 1263779
 end

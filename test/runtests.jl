@@ -1,8 +1,8 @@
 import FEHM
-using Base.Test
+import Test
 
 # Initialize FEHM.jl test suite
-@testset "FEHM.jl" begin
+@Test.testset "FEHM.jl" begin
     include("flow.jl")
     include("flattenzone.jl")
     include("hyco.jl")

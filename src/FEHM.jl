@@ -7,7 +7,7 @@ import WriteVTK
 import DocumentFunction
 
 fehmdir = Base.source_path()
-if fehmdir == nothing
+if fehmdir === nothing
 	fehmdir = splitdir(dirname(@__FILE__))[1]
 else
 	fehmdir = splitdir(splitdir(fehmdir)[1])[1]
@@ -20,21 +20,6 @@ $(DocumentFunction.documentfunction(test))
 """
 function test()
 	include(joinpath(fehmdir, "test", "runtests.jl"))
-end
-
-function myreadlines(filename::String)
-	if isfile(filename)
-		f = open(filename)
-		l = myreadlines(f)
-		close(f)
-		return l
-	else
-		warn("File $filename does not exist!")
-		return nothing
-	end
-end
-function myreadlines(stream::IO)
-	return readlines(stream; chomp=false)
 end
 
 function checknode()
@@ -58,18 +43,6 @@ end
 function symlinkdir(filename::AbstractString, dir::AbstractString)
 	symlink(abspath(filename), joinpath(dir, filename))
 end
-
-@doc """
-Read lines of a file
-
-$(DocumentFunction.documentfunction(myreadlines;
-argtext=Dict("filename"=>"file name",
-            "stream"=>"file handle")))
-
-Returns:
-
-- an array with each line of the file an element
-""" myreadlines
 
 """
 Convert a year into FEHM day (default start year is 1964)
@@ -112,7 +85,7 @@ Returns:
 - a dictionary of parsed file
 """
 function parsefin(filename)
-	lines = myreadlines(filename)
+	lines = readlines(filename)
 	result = Dict()
 	result["title"] = strip(split(lines[2], ":")[2])
 	result["time"] = parse(Float64, lines[3])
@@ -135,8 +108,8 @@ Write data into a file
 
 $(DocumentFunction.documentfunction(writefin;
 argtext=Dict("findata"=>"input data to write",
-            "filename"=>"file name"),
-keytext=Dict("writekeys"=>"the keys of the items that will be written into the file [default=`\[\"saturation\", \"pressure\", \"no fluxes\"\]`]")))
+			"filename"=>"file name"),
+			keytext=Dict("writekeys"=>"the keys of the items that will be written into the file [default=[\"saturation\", \"pressure\", \"no fluxes\"]]")))
 
 Dumps:
 
@@ -220,8 +193,8 @@ end
 readzone(filename; returndict::Bool=false) = parsezone(filename; returndict=returndict)
 
 function parsezone(filename::String; returndict::Bool=false)
-	info("Parse zones in $filename")
-	return parsezone(myreadlines(filename), returndict=returndict)
+	@info("Parse zones in $filename")
+	return parsezone(readlines(filename), returndict=returndict)
 end
 function parsezone(lines::Vector; returndict::Bool=false)
 	lines = chomp.(lines)
@@ -234,15 +207,15 @@ function parsezone(lines::Vector; returndict::Bool=false)
 			push!(nnumlines, i)
 		end
 	end
-	zonenumbers = Array{Int64}(length(nnumlines))
+	zonenumbers = Array{Int64}(undef, length(nnumlines))
 	for i = 1:length(nnumlines)
 		zonenumbers[i] = parse(Int, split(lines[nnumlines[i] - 1])[1])
 	end
-	nodenumbers = Array{Array{Int64, 1}}(length(nnumlines))
+	nodenumbers = Array{Array{Int64, 1}}(undef, length(nnumlines))
 	for i = 1:length(nnumlines)
 		nodenumbers[i] = Int64[]
 		numnodes = parse(Int, lines[nnumlines[i] + 1])
-		nodenumbers[i] = Array{Int64}(numnodes)
+		nodenumbers[i] = Array{Int64}(undef, numnodes)
 		j = 2
 		k = 1
 		while k <= numnodes
@@ -292,7 +265,7 @@ Returns:
 - coordinates of the grid
 """
 function parsegrid(fehmfilename)
-	lines = myreadlines(fehmfilename)
+	lines = readlines(fehmfilename)
 	if !startswith(lines[1], "coor")
 		error("FEHM grid file doesn't start with \"coor\"")
 	end
@@ -320,7 +293,7 @@ Returns:
 - x, y, z coordinates and mesh cell information
 """
 function parsegeo(geofilename, docells=true)
-	lines = myreadlines(geofilename)
+	lines = readlines(geofilename)
 	i = 1
 	xs = Float64[]
 	ys = Float64[]
@@ -370,7 +343,7 @@ Dumps:
 function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 	pvd = WriteVTK.paraview_collection(pvdrootname)
 	xs, ys, zs, cells = parsegeo(geofilename)
-	avslines = myreadlines(string(rootname, ".avs_log"))
+	avslines = readlines(string(rootname, ".avs_log"))
 	for i = 5:length(avslines)
 		splitline = split(avslines[i])
 		avsrootname = splitline[1]
@@ -409,7 +382,7 @@ Dumps:
 function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix="_con_node.avs")
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	filename = string(rootname, ".avs_log")
-	avslines = myreadlines(filename)
+	avslines = readlines(filename)
 	if avslines == nothing
 		warn("FEHM AVS processing failed!")
 		return nothing
@@ -449,7 +422,7 @@ function avs2jld2(geofilename, rootname, jld2filename; timefilter::Function=t->t
   rootdir = splitdir(rootname)[1]
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	filename = string(rootname, ".avs_log")
-	avslines = myreadlines(filename)
+	avslines = readlines(filename)
 	if avslines == nothing
 		warn("FEHM AVS processing failed!")
 		return nothing
@@ -534,15 +507,15 @@ function parsestor(filename)
 end
 
 function parseflow(filename::String)
-	parseflow(myreadlines(filename), filename)
+	parseflow(readlines(filename), filename)
 end
 function parseflow(lines::Vector, filename)
 	@assert startswith(lines[1], "flow")
-	isanode = Array{Bool}(length(lines) - 2)
-	zoneornodenums = Array{Int}(length(lines) - 2)
-	skds = Array{Float64}(length(lines) - 2)
-	eflows = Array{Float64}(length(lines) - 2)
-	aipeds = Array{Float64}(length(lines) - 2)
+	isanode = Array{Bool}(undef, length(lines) - 2)
+	zoneornodenums = Array{Int}(undef, length(lines) - 2)
+	skds = Array{Float64}(undef, length(lines) - 2)
+	eflows = Array{Float64}(undef, length(lines) - 2)
+	aipeds = Array{Float64}(undef, length(lines) - 2)
 	for i = 2:length(lines) - 1
 		splitline = split(lines[i])
 		zoneornodenums[i - 1] = parse(Int, splitline[1])
@@ -579,15 +552,15 @@ Returns:
 """ parseflow
 
 function parsehyco(filename::String)
-	parsehyco(myreadlines(filename), filename)
+	parsehyco(readlines(filename), filename)
 end
 function parsehyco(lines::Vector, filename::String)
 	@assert startswith(lines[1], "hyco")
-	isanode = Array{Bool}(length(lines) - 2)
-	zoneornodenums = Array{Int}(length(lines) - 2)
-	kxs = Array{Float64}(length(lines) - 2)
-	kys = Array{Float64}(length(lines) - 2)
-	kzs = Array{Float64}(length(lines) - 2)
+	isanode = Array{Bool}(undef, length(lines) - 2)
+	zoneornodenums = Array{Int}(undef, length(lines) - 2)
+	kxs = Array{Float64}(undef, length(lines) - 2)
+	kys = Array{Float64}(undef, length(lines) - 2)
+	kzs = Array{Float64}(undef, length(lines) - 2)
 	for i = 2:length(lines) - 1
 		splitline = split(lines[i])
 		zoneornodenums[i - 1] = parse(Int, splitline[1])
@@ -648,10 +621,10 @@ function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherst
 			numflatnodes += length(zone2nodes[zoneornodenums[i]])
 		end
 	end
-	nodenums = Array{Int}(numflatnodes)
-	newotherstuff = Array{Any}(length(otherstuff))
+	nodenums = Array{Int}(undef, numflatnodes)
+	newotherstuff = Array{Any}(undef, length(otherstuff))
 	for (i, x) in enumerate(otherstuff)
-		newotherstuff[i] = Array{eltype(x)}(numflatnodes)
+		newotherstuff[i] = Array{eltype(x)}(undef, numflatnodes)
 	end
 	k = 1
 	for i = 1:length(isanode)
