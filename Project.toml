@@ -1,6 +1,6 @@
 name = "FEHM"
 uuid = "08f7bda6-d19a-5869-bd1c-a698fdb2a278"
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 DocumentFunction = "e1f3b4f0-2dc4-57d3-83f7-d4b7faf3b05b"
@@ -13,7 +13,7 @@ WriteVTK = "64499a7a-5c06-52f2-abe2-ccb03c286192"
 DocumentFunction = "1"
 FileIO = "1"
 JLD = "0.12, 0.13"
-JLD2 = "0.2, 0.3"
+JLD2 = "0.2, 0.3, 0.4"
 WriteVTK = "1"
 julia = "^1"
 
