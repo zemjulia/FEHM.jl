@@ -2,9 +2,10 @@ __precompile__()
 
 module FEHM
 
+import DelimitedFiles
+import DocumentFunction
 import JLD
 import WriteVTK
-import DocumentFunction
 
 fehmdir = Base.source_path()
 if fehmdir === nothing
@@ -131,7 +132,7 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 end
 
 function getwellnodes(filename::String, x::Number, y::Number; kw...)
-	c = readdlm(filename)
+	c = DelimitedFiles.readdlm(filename)
 	getwellnodes(c, x, y; kw...)
 end
 function getwellnodes(c::Array, x::Number, y::Number; topnodes::Integer=2, nodespercolumn::Integer=44)
@@ -183,7 +184,7 @@ function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; ke
 		println(f, zonenumbers[i])
 		println(f, "nnum")
 		println(f, length(nodenumbers[i]))
-		writedlm(f, nodenumbers[i]')
+		DelimitedFiles.writedlm(f, nodenumbers[i]')
 	end
 	println(f, "")
 	println(f, "stop")
@@ -349,17 +350,17 @@ function avs2vtk(geofilename, rootname, pvdrootname, vtkrootname)
 		avsrootname = splitline[1]
 		time = parse(Float64, splitline[2])
 		vtkfile = WriteVTK.vtk_grid(string(vtkrootname, "_$(i - 5)"), xs, ys, zs, cells)
-		timedata = readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
+		timedata = DelimitedFiles.readdlm(string(avsrootname, "_con_node.avs"), skipstart=2)
 		filename = string(avsrootname, "_sca_node.avs")
 		if isfile(filename)
-			timedata = readdlm(filename, skipstart=2)
+			timedata = DelimitedFiles.readdlm(filename, skipstart=2)
 			WriteVTK.vtk_point_data(vtkfile, timedata[:, 2], "WL")
 			WriteVTK.vtk_save(vtkfile)
 			WriteVTK.collection_add_timestep(pvd, vtkfile, time)
 		end
 		filename = string(avsrootname, "_con_node.avs")
 		if isfile(filename)
-			timedata = readdlm(filename, skipstart=2)
+			timedata = DelimitedFiles.readdlm(filename, skipstart=2)
 			WriteVTK.vtk_point_data(vtkfile, timedata[:, 2], "Cr")
 			WriteVTK.vtk_save(vtkfile)
 			WriteVTK.collection_add_timestep(pvd, vtkfile, time)
@@ -396,7 +397,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix=
 		time = parse(Float64, splitline[2])
 		if timefilter(time)
 			push!(times, time)
-			timedata = readdlm(string(avsrootname, suffix), skipstart=2)
+			timedata = DelimitedFiles.readdlm(string(avsrootname, suffix), skipstart=2)
 			crdata = timedata[:, 2]
 			push!(crdatas, crdata)
 		end
@@ -438,13 +439,13 @@ function avs2jld2(geofilename, rootname, jld2filename; timefilter::Function=t->t
       push!(times, time)
 			filename = string(avsrootname, "_sca_node.avs")
 			if isfile(filename)
-				timedata = readdlm(filename, skipstart=2)
+				timedata = DelimitedFiles.readdlm(filename, skipstart=2)
 				wldata = timedata[:, 2]
 				push!(wldatas, wldata)
 			end
 			filename = string(avsrootname, "_con_node.avs")
 			if isfile(filename)
-				timedata = readdlm(filename, skipstart=2)
+				timedata = DelimitedFiles.readdlm(filename, skipstart=2)
 				crdata = timedata[:, 2]
 				push!(crdatas, crdata)
 			end
@@ -476,14 +477,14 @@ function parsestor(filename)
 	if numareacoeffs != 1
 		error("only scalar coefficients supported -- see http://lagrit.lanl.gov/docs/STOR_Form.html")
 	end
-	tokens_any = filter(x->isa(x, Number), permutedims(readdlm(filename; skipstart=3), (2, 1)))
+	tokens_any = filter(x->isa(x, Number), permutedims(DelimitedFiles.readdlm(filename; skipstart=3), (2, 1)))
 	tokens::Array{Float64, 1} = Float64.(tokens_any)
 	tokens_any = nothing
 	volumes = tokens[1:numequations]
 	fehmweirdness = Int.(tokens[numequations + 1:2 * numequations + 1])#see http://lagrit.lanl.gov/docs/STOR_Form.html to understand the fehmweirdness
 	numconnections = diff(fehmweirdness)
 	rowentries = Int.(floor.(tokens[2 * numequations + 2:2 * numequations + 1 + numcoeffs]))
-	connections = Array{Pair{Int, Int}}(numcoeffs)
+	connections = Array{Pair{Int, Int}}(undef, numcoeffs)
 	k = 1
 	for i = 1:numequations
 		for j = 1:numconnections[i]
@@ -499,7 +500,7 @@ function parsestor(filename)
 	end
 	coeffs = tokens[4 * numequations + 3 + 2 * numcoeffs:4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs]
 	@assert 4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs == length(tokens)
-	areasoverlengths = Array{Float64}(length(connections))
+	areasoverlengths = Array{Float64}(undef, length(connections))
 	for i = 1:length(areasoverlengths)
 		areasoverlengths[i] = abs(coeffs[coeffindices[i]])
 	end
