@@ -3,6 +3,7 @@ uuid = "08f7bda6-d19a-5869-bd1c-a698fdb2a278"
 version = "0.3.1"
 
 [deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 DocumentFunction = "e1f3b4f0-2dc4-57d3-83f7-d4b7faf3b05b"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
