@@ -384,7 +384,7 @@ function avs2jld(geofilename, rootname, jldfilename; timefilter=t->true, suffix=
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	filename = string(rootname, ".avs_log")
 	avslines = readlines(filename)
-	if avslines == nothing
+	if avslines === nothing
 		warn("FEHM AVS processing failed!")
 		return nothing
 	end
@@ -424,7 +424,7 @@ function avs2jld2(geofilename, rootname, jld2filename; timefilter::Function=t->t
 	xs, ys, zs, cells = parsegeo(geofilename, false)
 	filename = string(rootname, ".avs_log")
 	avslines = readlines(filename)
-	if avslines == nothing
+	if avslines === nothing
 		warn("FEHM AVS processing failed!")
 		return nothing
 	end
