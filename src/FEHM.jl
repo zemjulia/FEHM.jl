@@ -131,7 +131,7 @@ function writefin(findata, filename; writekeys=["saturation", "pressure", "no fl
 	close(f)
 end
 
-function getwellnodes(filename::String, x::Number, y::Number; kw...)
+function getwellnodes(filename::AbstractString, x::Number, y::Number; kw...)
 	c = DelimitedFiles.readdlm(filename)
 	getwellnodes(c, x, y; kw...)
 end
@@ -176,7 +176,7 @@ Dumps:
 
 - a file contain zone information named by the value of 'filename'
 """
-function dumpzone(filename::String, zonenumbers::Vector, nodenumbers::Vector; keyword::String="zonn")
+function dumpzone(filename::AbstractString, zonenumbers::AbstractVector, nodenumbers::AbstractVector; keyword::AbstractString="zonn")
 	@assert length(nodenumbers) == length(zonenumbers)
 	f = open(filename, "w")
 	println(f, keyword)
@@ -193,11 +193,11 @@ end
 
 readzone(filename; returndict::Bool=false) = parsezone(filename; returndict=returndict)
 
-function parsezone(filename::String; returndict::Bool=false)
+function parsezone(filename::AbstractString; returndict::Bool=false)
 	@info("Parse zones in $filename")
 	return parsezone(readlines(filename), returndict=returndict)
 end
-function parsezone(lines::Vector; returndict::Bool=false)
+function parsezone(lines::AbstractVector; returndict::Bool=false)
 	lines = chomp.(lines)
 	if !startswith(lines[1], "zone") && !startswith(lines[1], "zonn")
 		error("Provided file doesn't start with zone or zonn on the first line")
@@ -507,10 +507,10 @@ function parsestor(filename)
 	return volumes, areasoverlengths, connections
 end
 
-function parseflow(filename::String)
+function parseflow(filename::AbstractString)
 	parseflow(readlines(filename), filename)
 end
-function parseflow(lines::Vector, filename)
+function parseflow(lines::AbstractVector, filename)
 	@assert startswith(lines[1], "flow")
 	isanode = Array{Bool}(undef, length(lines) - 2)
 	zoneornodenums = Array{Int}(undef, length(lines) - 2)
@@ -552,10 +552,10 @@ Returns:
 - `aipeds` :
 """ parseflow
 
-function parsehyco(filename::String)
+function parsehyco(filename::AbstractString)
 	parsehyco(readlines(filename), filename)
 end
-function parsehyco(lines::Vector, filename::String)
+function parsehyco(lines::AbstractVector, filename::AbstractString)
 	@assert startswith(lines[1], "hyco")
 	isanode = Array{Bool}(undef, length(lines) - 2)
 	zoneornodenums = Array{Int}(undef, length(lines) - 2)
