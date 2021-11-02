@@ -314,7 +314,7 @@ function parsegeo(geofilename, docells=true)
 		splitline = split(lines[i])
 	end
 	if docells
-		cells = Array{WriteVTK.MeshCell}(length(lines) - i + 1)
+		cells = Array{WriteVTK.MeshCell}(undef, length(lines) - i + 1)
 		fourtoseven = 4:7
 		for j = i:length(lines)
 			splitline = split(lines[j])
@@ -325,7 +325,7 @@ function parsegeo(geofilename, docells=true)
 			cells[j - i + 1] = WriteVTK.MeshCell(WriteVTK.VTKCellTypes.VTK_TETRA, ns)
 		end
 	else
-		cells = Array{WriteVTK.MeshCell}(0)
+		cells = WriteVTK.MeshCell[]
 	end
 	return xs, ys, zs, cells
 end
