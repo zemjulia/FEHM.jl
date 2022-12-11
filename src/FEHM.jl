@@ -180,7 +180,7 @@ function dumpzone(filename::AbstractString, zonenumbers::AbstractVector, nodenum
 	@assert length(nodenumbers) == length(zonenumbers)
 	f = open(filename, "w")
 	println(f, keyword)
-	for i = 1:length(zonenumbers)
+	for i = eachindex(zonenumbers)
 		println(f, zonenumbers[i])
 		println(f, "nnum")
 		println(f, length(nodenumbers[i]))
@@ -203,17 +203,17 @@ function parsezone(lines::AbstractVector; returndict::Bool=false)
 		error("Provided file doesn't start with zone or zonn on the first line")
 	end
 	nnumlines = Int64[]
-	for i = 1:length(lines)
+	for i = eachindex(lines)
 		if contains(lines[i], "nnum")
 			push!(nnumlines, i)
 		end
 	end
 	zonenumbers = Array{Int64}(undef, length(nnumlines))
-	for i = 1:length(nnumlines)
+	for i = eachindex(nnumlines)
 		zonenumbers[i] = parse(Int, split(lines[nnumlines[i] - 1])[1])
 	end
 	nodenumbers = Array{Array{Int64, 1}}(undef, length(nnumlines))
-	for i = 1:length(nnumlines)
+	for i = eachindex(nnumlines)
 		nodenumbers[i] = Int64[]
 		numnodes = parse(Int, lines[nnumlines[i] + 1])
 		nodenumbers[i] = Array{Int64}(undef, numnodes)
@@ -229,9 +229,9 @@ function parsezone(lines::AbstractVector; returndict::Bool=false)
 	if returndict
 		d1 = Dict()
 		d2 = Dict()
-		for i = 1:length(nnumlines)
+		for i = eachindex(nnumlines)
 			d2[zonenumbers[i]] = Int64[]
-			for j = 1:length(nodenumbers[i])
+			for j = eachindex(nodenumbers[i])
 				d1[nodenumbers[i][j]] = zonenumbers[i]
 				push!(d2[zonenumbers[i]], nodenumbers[i][j])
 			end
@@ -501,7 +501,7 @@ function parsestor(filename)
 	coeffs = tokens[4 * numequations + 3 + 2 * numcoeffs:4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs]
 	@assert 4 * numequations + 2 + 2 * numcoeffs + numwrittencoeffs == length(tokens)
 	areasoverlengths = Array{Float64}(undef, length(connections))
-	for i = 1:length(areasoverlengths)
+	for i = eachindex(areasoverlengths)
 		areasoverlengths[i] = abs(coeffs[coeffindices[i]])
 	end
 	return volumes, areasoverlengths, connections
@@ -615,7 +615,7 @@ Returns:
 function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherstuff...)
 	zone2nodes = Dict{Int, Array{Int, 1}}(zip(zonenumbers, nodenumbers))
 	numflatnodes = 0
-	for i = 1:length(isanode)
+	for i = eachindex(isanode)
 		if isanode[i]
 			numflatnodes += 1
 		else
@@ -628,16 +628,16 @@ function flattenzones(zonenumbers, nodenumbers, isanode, zoneornodenums, otherst
 		newotherstuff[i] = Array{eltype(x)}(undef, numflatnodes)
 	end
 	k = 1
-	for i = 1:length(isanode)
+	for i = eachindex(isanode)
 		if isanode[i]
-			for j = 1:length(otherstuff)
+			for j = eachindex(otherstuff)
 				newotherstuff[j][k] = otherstuff[j][i]
 			end
 			nodenums[k] = zoneornodenums[i]
 			k += 1
 		else
 			for nodenum in zone2nodes[zoneornodenums[i]]
-				for j = 1:length(otherstuff)
+				for j = eachindex(otherstuff)
 					newotherstuff[j][k] = otherstuff[j][i]
 				end
 				nodenums[k] = nodenum
