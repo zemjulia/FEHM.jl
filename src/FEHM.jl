@@ -4,7 +4,9 @@ module FEHM
 
 import DelimitedFiles
 import DocumentFunction
+import FileIO
 import JLD
+import JLD2
 import WriteVTK
 
 fehmdir = Base.source_path()
